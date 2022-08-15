@@ -260,6 +260,7 @@ export const exit = () => {
 
 
 export const draw = async () => {
+    console.log("start");
     return new Promise<_PROJECTION_ID>((resolve, reject) => {
         switch (_status) {
             case _Mode.undo: return reject("请先调用enter指令");
