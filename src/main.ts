@@ -7,8 +7,9 @@ import { BoxGeometry, CameraEventType, Cartesian2, Cartesian3, Cartographic, Ces
 // import CesiumNavigation from "cesium-navigation-es6";
 // import { ArcMode, createElectricArc } from "./createElectricArc";
 // import { HawkEye2DMap } from "./HawkEye2DMap";
-import { draw, enter, exit } from "../dev/ClippingPlane";
+import { draw, enter, exit, remove } from "../dev/ClippingPlane";
 import { TerrainClipPlan } from "../dev/clip"
+import VideoSynchronizer from "cesium/Source/Core/VideoSynchronizer";
 
 
 
@@ -549,85 +550,37 @@ const two = [
 // terrainClipPlan.updateData(aaa)
 
 
-
-
-
-
-/**
- * 根据多边形数组创建裁切面
- * @param points_ 多边形数组集合
- * @returns {[]} 返回裁切面数组
- */
-function createClippingPlane(points_: number[][]) {
-  let points = [];
-  for (let i = 0; i < points_.length; i++) {
-    points.push(Cartesian3.fromDegrees(points_[i][0], points_[i][1]))
-  }
-  let pointsLength = points.length;
-  let clippingPlanes = []; // 存储ClippingPlane集合
-  for (let i = 0; i < pointsLength; ++i) {
-    let nextIndex = (i + 1) % pointsLength;
-    let midpoint = Cartesian3.add(points[i], points[nextIndex], new Cartesian3());
-    midpoint = Cartesian3.multiplyByScalar(midpoint, 0.5, midpoint);
-
-    let up = Cartesian3.normalize(midpoint, new Cartesian3());
-    let right = Cartesian3.subtract(points[nextIndex], midpoint, new Cartesian3());
-    right = Cartesian3.normalize(right, right);
-
-    let normal = Cartesian3.cross(right, up, new Cartesian3());
-    normal = Cartesian3.normalize(normal, normal);
-
-    let originCenteredPlane = new Plane(normal, 0.0);
-    let distance = Plane.getPointDistance(originCenteredPlane, midpoint);
-
-    clippingPlanes.push(new ClippingPlane(normal, distance));
-  }
-  return clippingPlanes;
-}
-
-
-function clippings() {
-  let clippingPlanes1 = createClippingPlane(one);
-  let clippingPlanes2 = createClippingPlane(two);
-  let clippingPlaneCollection1 = new ClippingPlaneCollection({
-    planes: clippingPlanes1,
-  });
-  let clippingPlaneCollection2 = new ClippingPlaneCollection({
-    planes: clippingPlanes2,
-  });
-  if (!isClipping) {
-    viewer.scene.globe.depthTestAgainstTerrain = true;
-    viewer.scene.globe.multiClippingPlanes = new MultiClippingPlaneCollection({
-      collections: [clippingPlaneCollection1, clippingPlaneCollection2],
-      edgeWidth: 5,
-      edgeColor: Color.WHITE,
-    });
-    isClipping = true;
-  } else {
-    viewer.scene.globe.multiClippingPlanes = undefined;
-    isClipping = false;
-  }
-}
-// clippings();
-
-// const bb = await (async (resolve: (v: number) => typeof v) => {
-//   console.log(2);
-//   return resolve;
-// })((a) => { return a });
-
-
 // const aa = (async () => {
-//   console.log(1)
+//   console.log(11111)
 //   return 1;
-// })();
+// })().then(v => {
+//   console.log(v);
+//   return 11;
+// }).then(v => {
+//   console.log(v)
+// });
 
-// console.log(bb(2));
-// console.log(22222);
+// const bb = (async () => {
+//   console.log(22222)
+//   return 2;
+// })().then(v => {
+//   console.log(v);
+//   let sdfsf = (async () => {
+//     console.log("YYYY");
+//     return "yyyyy";
+//   })().then(v => { console.log(v) });
+//   return 22
+// }).then(v => {
+//   console.log(v)
+// });
+
+// console.log(3333);
 
 
 
 enter(viewer, { edgeWidth: 5, edgeColor: Color.RED });
 document.onkeyup = function (event) {
-  if (event.key === "d") draw().then(collection => console.log(collection)).catch(e => console.log(e));
+  if (event.key === "z") remove(0);
+  if (event.key === "d") draw().then(collection => console.log(collection, "%%%%%%%%%%%%%%")).catch(e => console.log(e));
   if (event.key === "e") exit();
 };

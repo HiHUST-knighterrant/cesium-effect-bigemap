@@ -72,7 +72,8 @@ TerrainClipPlan.prototype.updateData = function (e: Array<Cesium.Cartesian3>
         planes: t,
         edgeWidth: 1,
         edgeColor: Cesium.Color.WHITE,
-        enabled: !0
+        enabled: !0,
+        unionClippingRegions: true
     }), this._prepareWell(e), this._createWell(this.wellData)
 }
 

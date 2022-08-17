@@ -18,8 +18,11 @@ type _WALL_ID = number;
 type _PROJECTION_ID = number;
 type _COLLECTION_ID = number;
 type _BOTTOMSURFACE_ID = number;
+type _INTERSECTION_LINE_ID = number;
+type _COLLINEATION_ID = number;
 
 
+const offset = 90;
 let _draw_time: number | undefined;
 let _status = _Mode.undo;
 let _viewer: Viewer | undefined;
@@ -30,15 +33,18 @@ const _web_mercator = new WebMercatorProjection();
 let _reject: ((reason?: any) => void) | undefined;
 // 保存多边形拆分时的延长线 也是拆分后两个多边形的共线线段
 let _collineation: [Cartesian2, Cartesian2][] = [];
+let _projection2Collineations: { [index: _PROJECTION_ID]: _COLLINEATION_ID[] } = {};
 // 保存相交多边形的线段
 let _intersection_line: [Cartesian2, Cartesian2][] = [];
+let _intersectionLine2Projections: { [index: _INTERSECTION_LINE_ID]: [_PROJECTION_ID, _PROJECTION_ID] } = {};
 
 
 let _ploygons: Cartesian3[][] = [];
 let _ploygons_boundingbox: { min_x: number, max_x: number, min_y: number, max_y: number }[] = [];
 let _wall: Primitive[] = [];
 let _projections: Cartesian3[][] = [];
-let _projection2WallIndex: { [index: _PROJECTION_ID]: _WALL_ID } = {};
+let _projection2MinHeight: { [index: _PROJECTION_ID]: number } = {};
+let _projection2WallIndex: { [index: _PROJECTION_ID]: _WALL_ID[] } = {};
 let _cutting2projection_positions: { [index: _CUTTING_ID]: _PROJECTION_ID } = {};
 let _projection2Cutting: { [index: _PROJECTION_ID]: _CUTTING_ID[] } = {};
 let _clippingPlaneCollections: ClippingPlaneCollection[][] = [];
@@ -51,7 +57,7 @@ let _projection2BottomSurface: { [index: _PROJECTION_ID]: _BOTTOMSURFACE_ID } = 
 const _cutting = (_projection_positions: Cartesian3[], _riding_index: number[]) => {
     const _riding: number[][] = [];
     // const _result: Cartographic[][] = [];
-    const _result: { cartographic: Cartographic[][], mercator: Cartesian3[][] } = { cartographic: [], mercator: [] };
+    const _result: { cartographic: Cartographic[][], mercator: Cartesian3[][], collineation_index: _COLLINEATION_ID[] } = { cartographic: [], mercator: [], collineation_index: [] };
     const _projection_ploygon: Cartesian3[][] = [];
 
     _projection_ploygon.push(_projection_positions);
@@ -118,7 +124,7 @@ const _cutting = (_projection_positions: Cartesian3[], _riding_index: number[]) 
         }
 
         // 保存拆分的线段
-        _collineation.push([new Cartesian2(projection_iterate[v].x, projection_iterate[v].y), intersection_position!]);
+        _result.collineation_index.push(_collineation.push([new Cartesian2(projection_iterate[v].x, projection_iterate[v].y), intersection_position!]) - 1);
 
         const ploygon1 = [];
         const ploygon2 = [];
@@ -260,8 +266,6 @@ export const exit = () => {
 
 
 export const draw = async () => {
-    console.log("start");
-    console.log(11111)
     return new Promise<_PROJECTION_ID>((resolve, reject) => {
         switch (_status) {
             case _Mode.undo: return reject("请先调用enter指令");
@@ -287,6 +291,7 @@ export const draw = async () => {
 
         _handler!.setInputAction(
             async () => {
+                console.log("@@@@");
                 _status = _Mode.todo;
                 _reject = undefined;
                 _handler!.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
@@ -361,12 +366,11 @@ export const draw = async () => {
                     const wgs84: _WGS84_POSITION[] = planes.cartographic.flat().map(v => {
                         return {
                             lon: v.longitude,
-                            lat: v.latitude,
-                            is_origin: true
+                            lat: v.latitude
                         }
                     });
                     const effective = await _ellipsoidToLonLat(wgs84);
-                    if (_this_draw_time !== _draw_time) return;
+                    // if (_this_draw_time !== _draw_time) return;
                     const planes_effective: Cartesian3[][] = [];
                     lengths.forEach((v, i) => {
                         let s = 0;
@@ -400,6 +404,7 @@ export const draw = async () => {
                                 normal = Cartesian3.normalize(normal, normal);
 
                                 const originCenteredPlane = new Plane(normal, 0.0);
+
                                 const distance = Plane.getPointDistance(originCenteredPlane, midpoint);
                                 clippingPlanes.push(new ClippingPlane(normal, distance));
                             }
@@ -417,6 +422,9 @@ export const draw = async () => {
                     const cutting_index: number[] = [];
 
                     const _projection_index = _projections.push(_projection_positions) - 1;
+                    _projection2Collineations[_projection_index] = planes.collineation_index;
+
+                    _projection2MinHeight[_projection_index] = await _getClippingAreaMinHeight(_projection_index);
                     // 计算boundingbox 更新_ploygons和_ploygons_boundingbox
                     planes.mercator.forEach(val => {
                         cutting_index.push(_ploygons.push(val) - 1);
@@ -436,7 +444,7 @@ export const draw = async () => {
 
                         // 利用boundingbox快速判断多边形是否相交
                         _ploygons_boundingbox_backup.forEach((boundingbox, i) => {
-                            if ((max_x <= boundingbox.min_x) || (min_x >= boundingbox.max_x) || (max_y <= boundingbox.min_y) || (min_y >= boundingbox.max_y)) return;
+                            if (!boundingbox || !_ploygons_boundingbox[i] || (max_x <= boundingbox.min_x) || (min_x >= boundingbox.max_x) || (max_y <= boundingbox.min_y) || (min_y >= boundingbox.max_y)) return;
                             // 和该多边形一个拆分组的多边形全部一起更新
                             _need_update_polygons.push(_cutting2projection_positions[i]);
 
@@ -512,14 +520,12 @@ export const draw = async () => {
                                 if (quadrant_d) [...quadrant_d_sin].sort((a, b) => a - b).forEach(sin => intersection_polygon.push(quadrant_d[quadrant_d_sin.indexOf(sin)]))
 
 
-                                intersection_polygon.forEach((v, i) => _intersection_line.push([v, intersection_polygon[(i + 1) % intersection_polygon.length]]));
+                                // 这里要注意 _intersection_line中每条线段对应的都是两个多边形 行为相交多边形实际上是求两个多边形的交集区域 只要其中任意一个多边形被删除 则该交际多边形就也应该被删除 所以两个多边形都要记录下来
+                                intersection_polygon.forEach((v, ii) => _intersectionLine2Projections[_intersection_line.push([v, intersection_polygon[(ii + 1) % intersection_polygon.length]]) - 1] = [_projection_index, _cutting2projection_positions[i]]);
 
 
                                 // 画出交集多边形的线段 用于测试
-                                // _intersection_line.forEach(v => {
-                                //     _drawDebugLine(v);
-                                // });
-
+                                // _drawIntersectionLine(_intersection_line);
 
                             } else {
                                 console.warn(`相交多边形的顶点个数异常${intersection_points.length}`);
@@ -533,26 +539,28 @@ export const draw = async () => {
                     // 去重
                     _need_update_polygons = Array.from(new Set(_need_update_polygons));
                     // 删除之前的wallgeometry
-                    const delete_wall_index = _need_update_polygons.map(v => _projection2WallIndex[v]);
+                    const delete_wall_index = _need_update_polygons.map(v => _projection2WallIndex[v]).flat();
                     delete_wall_index.forEach(v => _wall[v] && _viewer!.scene.primitives.remove(_wall[v]) && delete _wall[v]);
 
                     // 生成贴图
-                    const positions = await _lerp(_projection_positions, _need_update_polygons);
-                    if (_this_draw_time !== _draw_time) return;
+                    console.log(_need_update_polygons);
+                    const positions = await _lerp(_projection_positions, _need_update_polygons, _projection_index);
+                    // if (_this_draw_time !== _draw_time) { remove(_projection_index); return; };
 
                     Object.keys(positions.old).forEach(v => {
                         const key = Number(v);
-                        _wall[_projection2WallIndex[key]] = _createWellWall(positions.old[key].position, positions.old[key].min_heights, positions.old[key].max_heights);
-                    })
+                        _projection2WallIndex[key] = [_wall.push(_createWellWall(positions.old[key].position, positions.old[key].min_heights, positions.old[key].max_heights)) - 1];
+                    });
 
                     _projection2BottomSurface[_projection_index] = _bottomSurfaces.push(_createBottomSurface(positions.position_bottom_surface)) - 1;
                     const create_wall_index = _wall.push(_createWellWall(positions.position, positions.min_heights, positions.max_heights)) - 1;
 
                     cutting_index.forEach(v => (_cutting2projection_positions[v] = _projection_index));
                     _projection2Cutting[_projection_index] = cutting_index;
-                    _projection2WallIndex[_projection_index] = create_wall_index;
+                    _projection2WallIndex[_projection_index] = [create_wall_index];
 
                     _projection2Collection[_projection_index] = _clippingPlaneCollections.push(collections) - 1;
+                    // _drawIntersectionLine(_intersection_line);
                     resolve(_projection_index);
                 }
 
@@ -599,34 +607,86 @@ const _segmentsIntersectionPoint = (a: Cartesian3, b: Cartesian3, c: Cartesian3,
 
 
 // 删除裁剪面
-export const remove = (_projection_id: _PROJECTION_ID) => {
+export const remove = async (_projection_id: _PROJECTION_ID) => {
     if (_status == _Mode.undo) return;
     if (!_projections[_projection_id]) return;
 
+    console.log("remove");
+    // _draw_time = undefined;
     _clippingPlaneCollections[_projection2Collection[_projection_id]].forEach(v => _viewer!.scene.globe.multiClippingPlanes!.remove(v));
+    delete _clippingPlaneCollections[_projection2Collection[_projection_id]];
+    delete _projection2Collection[_projection_id];
+
     _viewer!.scene.primitives.remove(_bottomSurfaces[_projection2BottomSurface[_projection_id]]);
-    _viewer!.scene.primitives.remove(_wall[_projection2WallIndex[_projection_id]]);
+    _projection2WallIndex[_projection_id].forEach(v => _viewer!.scene.primitives.remove(_wall[v]) && delete _wall[v]);
+    const _projection = [..._projections[_projection_id]];
+
     delete _projections[_projection_id];
+    delete _projection2MinHeight[_projection_id];
+
     delete _bottomSurfaces[_projection2BottomSurface[_projection_id]];
     delete _projection2BottomSurface[_projection_id];
 
-    delete _wall[_projection2WallIndex[_projection_id]];
     delete _projection2WallIndex[_projection_id];
 
     _projection2Cutting[_projection_id].forEach(v => { delete _ploygons[v]; delete _ploygons_boundingbox[v]; delete _cutting2projection_positions[v] });
     delete _projection2Cutting[_projection_id];
 
 
+    // 最后删除多边形相关的共线和交集多边形的线段
+    _projection2Collineations[_projection_id].forEach(v => delete _collineation[v]);
+    delete _projection2Collineations[_projection_id];
 
+    const check_intersection_lines_attr_projection: _PROJECTION_ID[] = [];
+    const check_intersection_lines = [..._intersection_line].filter((_, i) => _intersectionLine2Projections[i].indexOf(_projection_id) !== -1 && check_intersection_lines_attr_projection.push(_intersectionLine2Projections[i][1 - _intersectionLine2Projections[i].indexOf(_projection_id)]) && delete _intersection_line[i] && delete _intersectionLine2Projections[i]);
 
+    const _intersection_line_and_projection_line = [..._intersection_line];
+    _intersection_line_and_projection_line.push(..._projection.map<[Cartesian2, Cartesian2]>((v, i) => [new Cartesian2(v.x, v.y), new Cartesian2(_projection[(i + 1) % _projection.length].x, _projection[(i + 1) % _projection.length].y)]));
 
+    const wgs84: _WGS84_POSITION[] = [];
+    const wall_obj: { [index: _PROJECTION_ID]: { position: Cartesian3[][], max_heights: number[][], min_heights: number[][] } } = {};
+
+    check_intersection_lines.forEach((v, i) => {
+        if (!wall_obj[check_intersection_lines_attr_projection[i]]) wall_obj[check_intersection_lines_attr_projection[i]] = {
+            position: [],
+            max_heights: [],
+            min_heights: []
+        };
+        const line = _getLerpObject([new Cartesian3(v[0].x, v[0].y), new Cartesian3(v[1].x, v[1].y)], _intersection_line_and_projection_line);
+        line.position && wall_obj[check_intersection_lines_attr_projection[i]].position.push(...line.position);
+        wgs84.push(...line.wgs84);
+    });
+
+    const effective = await _ellipsoidToLonLat(wgs84);
+    console.log("draw");
+
+    Object.keys(wall_obj).forEach(async v => {
+        const key = Number(v);
+        for (let i = 0; i < wall_obj[key].position.length; i++) {
+        }
+        const min = _projection2MinHeight[key];
+        wall_obj[key].position.forEach(vv => {
+            // 由于splice改变了原数组的索引 所以不需要叠加索引 都是从0开始向后截取1001个
+            wall_obj[key].max_heights.push(effective.splice(0, 1001).map(v => v.height));
+            wall_obj[key].min_heights.push(vv.map(_ => min - offset));
+        });
+
+        if (!_projection2WallIndex[key]) _projection2WallIndex[key] = [];
+        _projection2WallIndex[key].push(_wall.push(_createWellWall(wall_obj[key].position, wall_obj[key].min_heights, wall_obj[key].max_heights)) - 1);
+
+        // 判断一下_bottomSurfaces是否存在 如果不存在需要添加 这里是因为在多边形中如果画一个小的多边形 很多变量都无法初始化
+        // if (!_projection2BottomSurface[key]) {
+        //     const new_lerp_object = _getLerpObject(_projections[key], _intersection_line, true);
+        //     _projection2BottomSurface[key] = _bottomSurfaces.push(_createBottomSurface(new_lerp_object.wgs84_bottom_surface!.map(v => { (v.height = min - offset); return v; }).map(v => Object.values(v)).flat())) - 1;
+        // }
+
+    });
 }
 
 // 删除所有裁剪面
 export const removeAll = () => {
     if (_status == _Mode.undo) return;
     _viewer!.scene.globe.multiClippingPlanes!.removeAll();
-
 }
 
 const _ellipsoidToLonLat = async function (c: _WGS84_POSITION[]) {
@@ -742,20 +802,16 @@ const _isSegmentsCollineation = (a: Cartesian2, b: Cartesian2, c: Cartesian2, d:
     return segments;
 }
 
-const _getLerpObject = (polygon: Cartesian3[], is_bottom_surface: boolean = false) => {
+const _getLerpObject = (polygon: Cartesian3[], _intersection_line: [Cartesian2, Cartesian2][], is_bottom_surface: boolean = false) => {
     const wgs84: _WGS84_POSITION[] = [];
     const position: Cartesian3[][] = [];
     const wgs84_bottom_surface: _WGS84_POSITION[] = [];
 
-    for (let i = 0; i < polygon.length; i++) {
-        // 方便底面贴图和周围墙体贴图分开计算
-        let origin_car = _web_mercator.unproject(polygon[i]);
-        is_bottom_surface && wgs84_bottom_surface.push({ lon: origin_car.longitude, lat: origin_car.latitude });
-
-        const next_i = (i + 1) % polygon.length;
-        let seg = [[new Cartesian2(polygon[i].x, polygon[i].y), new Cartesian2(polygon[next_i].x, polygon[next_i].y)]];
-        // 计算多边形的边和所有交集多边形的边是否存在共线的情况
+    if (polygon.length === 2) {
+        let seg = [[new Cartesian2(polygon[0].x, polygon[0].y), new Cartesian2(polygon[1].x, polygon[1].y)]];
+        // 计算边和所有交集多边形的边是否存在共线的情况
         for (let ii = 0; ii < _intersection_line.length; ii++) {
+            if (!_intersection_line[ii]) continue;
             const seg_backup = [...seg];
             seg = [];
             seg_backup.forEach(
@@ -765,8 +821,6 @@ const _getLerpObject = (polygon: Cartesian3[], is_bottom_surface: boolean = fals
             );
             if (!seg) break;
         }
-
-        if (!seg) continue;
 
         seg.forEach(
             vv => {
@@ -782,24 +836,88 @@ const _getLerpObject = (polygon: Cartesian3[], is_bottom_surface: boolean = fals
                 position.push(_p);
             }
         );
+    } else {
+        for (let i = 0; i < polygon.length; i++) {
+            // 方便底面贴图和周围墙体贴图分开计算
+            let origin_car = _web_mercator.unproject(polygon[i]);
+            is_bottom_surface && wgs84_bottom_surface.push({ lon: origin_car.longitude, lat: origin_car.latitude });
+
+            const next_i = (i + 1) % polygon.length;
+            let seg = [[new Cartesian2(polygon[i].x, polygon[i].y), new Cartesian2(polygon[next_i].x, polygon[next_i].y)]];
+            // 计算多边形的边和所有交集多边形的边是否存在共线的情况
+            for (let ii = 0; ii < _intersection_line.length; ii++) {
+                if (!_intersection_line[ii]) continue;
+                const seg_backup = [...seg];
+                seg = [];
+                seg_backup.forEach(
+                    v => {
+                        _isSegmentsCollineation(v[0], v[1], _intersection_line[ii][0], _intersection_line[ii][1]).forEach(vv => seg.push(vv));
+                    }
+                );
+                if (!seg) break;
+            }
+
+            if (!seg) continue;
+
+            seg.forEach(
+                vv => {
+                    const _p = [];
+                    for (let p = 0; p <= 1000; p++) {
+                        let m = Math.lerp(vv[0].x, vv[1].x, p / 1000);
+                        let g = Math.lerp(vv[0].y, vv[1].y, p / 1000);
+                        let car = _web_mercator.unproject(new Cartesian3(m, g));
+
+                        let f = Cartesian3.fromRadians(car.longitude, car.latitude, 0);
+                        _p.push(f) && wgs84.push({ lon: car.longitude, lat: car.latitude });
+                    }
+                    position.push(_p);
+                }
+            );
+        }
     }
+
     return is_bottom_surface ? { wgs84: wgs84, position: position, wgs84_bottom_surface: wgs84_bottom_surface } : { wgs84: wgs84, position: position }
 }
 
-const _lerp = async (t: Cartesian3[], _need_update_polygons: number[]) => {
-    let offset = 200;
+const _getClippingAreaMinHeight = async (_projection_id: _PROJECTION_ID) => {
+    const polygon = _projections[_projection_id];
+    let [min_x, max_x, min_y, max_y] = [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY];
+    polygon.forEach(v => {
+        min_x = window.Math.min(min_x, v.x);
+        max_x = window.Math.max(max_x, v.x);
+        min_y = window.Math.min(min_y, v.y);
+        max_y = window.Math.max(max_y, v.y);
+    });
+
+    const positions: _WGS84_POSITION[] = [];
+    const length_x = window.Math.round((max_x - min_x) / 50);
+    const length_y = window.Math.round((max_y - min_y) / 50);
+
+    for (let x = 0; x <= length_x; x++) {
+        for (let y = 0; y <= length_y; y++) {
+            let m = Math.lerp(min_x, max_x, x / length_x);
+            let g = Math.lerp(min_y, max_y, y / length_y);
+            let car = _web_mercator.unproject(new Cartesian3(m, g));
+            positions.push({ lon: car.longitude, lat: car.latitude });
+        }
+    }
+
+    const effective = await _ellipsoidToLonLat(positions);
+    return window.Math.min(...effective.map(v => v.height));
+}
+
+const _lerp = async (t: Cartesian3[], _need_update_polygons: number[], _projection_id: _PROJECTION_ID) => {
     let min = Number.POSITIVE_INFINITY;
     const max_heights: number[][] = [];
     const min_heights: number[][] = [];
     const wgs84: _WGS84_POSITION[] = [];
 
-    const old: { [index: number]: { position: Cartesian3[][], max_heights: number[][], min_heights: number[][] } } = {};
+    const old: { [index: _PROJECTION_ID]: { position: Cartesian3[][], max_heights: number[][], min_heights: number[][] } } = {};
     // 这里重新计算与当前多边形相交的之前的多边形
     _need_update_polygons.forEach(
         v => {
-
             const polygon = _projections[v];
-            const old_lerp_object = _getLerpObject(polygon);
+            const old_lerp_object = _getLerpObject(polygon, _intersection_line);
 
             old[v] = {
                 position: old_lerp_object.position,
@@ -812,7 +930,7 @@ const _lerp = async (t: Cartesian3[], _need_update_polygons: number[]) => {
 
 
     // 这里以计算当前绘制的多边形为主
-    const new_lerp_object = _getLerpObject(t, true);
+    const new_lerp_object = _getLerpObject(t, _intersection_line, true);
 
     wgs84.push(...new_lerp_object.wgs84);
 
@@ -825,8 +943,7 @@ const _lerp = async (t: Cartesian3[], _need_update_polygons: number[]) => {
             // 由于splice改变了原数组的索引 所以不需要叠加索引 都是从0开始向后截取1001个
             old[key].max_heights.push(effective.splice(0, 1001).map(v => v.height));
         }
-        const min = window.Math.min(...old[key].max_heights.flat());
-        old[key].position.forEach(v => old[key].min_heights.push(v.map(_ => min - offset)));
+        old[key].position.forEach(v => old[key].min_heights.push(v.map(_ => _projection2MinHeight[key] - offset)));
     });
 
     // 从结果中获取当前绘制多边形的高度
@@ -836,9 +953,10 @@ const _lerp = async (t: Cartesian3[], _need_update_polygons: number[]) => {
             max_heights[window.Math.floor(i / 1001)] = [];
             min_heights[window.Math.floor(i / 1001)] = [];
         }
-        max_heights[window.Math.floor(i / 1001)].push(v.height) && min_heights[window.Math.floor(i / 1001)].push(min - offset);
+        max_heights[window.Math.floor(i / 1001)].push(v.height) && min_heights[window.Math.floor(i / 1001)].push(_projection2MinHeight[_projection_id] - offset);
     });
 
+    console.log(min - offset);
     return {
         position: new_lerp_object.position,
         max_heights: max_heights,
@@ -937,4 +1055,10 @@ const _drawDebugLine = (v: [Cartesian2, Cartesian2]) => {
         })
     });
     _viewer!.entities.add(entity);
+}
+
+const _drawIntersectionLine = (line: [Cartesian2, Cartesian2][]) => {
+    line.forEach(v => {
+        v && _drawDebugLine(v);
+    });
 }
