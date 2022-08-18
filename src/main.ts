@@ -7,7 +7,7 @@ import { BoxGeometry, CameraEventType, Cartesian2, Cartesian3, Cartographic, Ces
 // import CesiumNavigation from "cesium-navigation-es6";
 // import { ArcMode, createElectricArc } from "./createElectricArc";
 // import { HawkEye2DMap } from "./HawkEye2DMap";
-import { draw, enter, exit, remove } from "../dev/ClippingPlane";
+import { draw, enter, exit, remove, removeAll } from "../dev/ClippingPlane";
 import { TerrainClipPlan } from "../dev/clip"
 import VideoSynchronizer from "cesium/Source/Core/VideoSynchronizer";
 
@@ -580,7 +580,7 @@ const two = [
 
 enter(viewer, { edgeWidth: 5, edgeColor: Color.RED });
 document.onkeyup = function (event) {
-  if (event.key === "z") remove(0);
+  if (event.key === "z") removeAll();
   if (event.key === "d") draw().then(collection => console.log(collection, "%%%%%%%%%%%%%%")).catch(e => console.log(e));
   if (event.key === "e") exit();
 };
