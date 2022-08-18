@@ -358,8 +358,7 @@ export const draw = async () => {
 
 				// 判断顶点的顺序是逆时针还是顺时针 并判断顶点是否为凹顶点
 				let last_riding = false;
-				let positive = false;
-				let negative = false;
+
 				_projection_positions.forEach((val, index) => {
 					if (last_riding) {
 						raised_index.push(index);
@@ -424,27 +423,60 @@ export const draw = async () => {
 							riding = true;
 							last_riding = true;
 							break;
-						} else if (Math.sign(i_cross) === 1) {
-							positive = true;
-						} else if (Math.sign(i_cross) === -1) {
-							negative = true;
 						}
 					}
 
 					riding ? _riding_index.push(index) : raised_index.push(index);
 				});
 
-				// 出现异常情况
-				if (_projection_positions.length !== 3 && positive === negative) {
-					return reject('检查顶点顺序 无法判断是否为逆时针或者顺时针');
-				}
-
 				const _projection_index = _projections.push(_projection_positions) - 1;
 				const _draw_time = new Date().getTime();
 				_projections2Time[_projection_index] = _draw_time;
 
 				// 判断_positions顶点顺序 转换为逆时针 并更新_riding_index中的记录的_positions凹顶点的索引位置
-				negative &&
+				let [min_x, max_x, min_y, max_y] = [
+					Number.POSITIVE_INFINITY,
+					Number.NEGATIVE_INFINITY,
+					Number.POSITIVE_INFINITY,
+					Number.NEGATIVE_INFINITY,
+				];
+				let min_x_i: number, max_x_i: number, min_y_i: number, max_y_i: number;
+
+				_projection_positions.forEach((v, i) => {
+					v.x < min_x && (min_x = v.x) && (min_x_i = i);
+					v.x > max_x && (max_x = v.x) && (max_x_i = i);
+					v.y < min_y && (min_y = v.y) && (min_y_i = i);
+					v.y > max_y && (max_y = v.y) && (max_y_i = i);
+				});
+				const arr = [min_x_i!, max_x_i!, min_y_i!, max_y_i!].sort((a, b) => a - b);
+				let positive = 0;
+				let negative = 0;
+
+				arr.forEach((v, i) => {
+					const next_i = (i + 1) % arr.length;
+					const last_i = i - 1 === -1 ? arr.length - 1 : i - 1;
+
+					const cv = new Cartesian2(_projection_positions[v].x, _projection_positions[v].y);
+					const lv = new Cartesian2(
+						_projection_positions[arr[last_i]].x,
+						_projection_positions[arr[last_i]].y
+					);
+					const nv = new Cartesian2(
+						_projection_positions[arr[next_i]].x,
+						_projection_positions[arr[next_i]].y
+					);
+
+					const cross = Cartesian2.cross(
+						Cartesian2.subtract(cv, lv, new Cartesian2()),
+						Cartesian2.subtract(nv, cv, new Cartesian2())
+					);
+
+					if (cross > 0) positive++;
+					else if (cross < 0) negative++;
+				});
+
+				// 转换顶点顺序
+				negative > positive &&
 					_positions.reverse() &&
 					_projection_positions.reverse() &&
 					(_riding_index = _riding_index.map(v => _positions.length - 1 - v));
