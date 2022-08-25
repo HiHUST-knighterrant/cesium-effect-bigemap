@@ -1,44 +1,21 @@
 import {
-	BoxGeometry,
 	CameraEventType,
-	Cartesian2,
 	Cartesian3,
 	Cartographic,
 	Cesium3DTileset,
-	Cesium3DTileStyle,
-	CesiumTerrainProvider,
-	CircleEmitter,
-	ClippingPlane,
-	ClippingPlaneCollection,
 	Color,
 	createWorldTerrain,
-	defined,
 	Ellipsoid,
 	EventHelper,
-	HeadingPitchRoll,
 	Ion,
-	IonResource,
-	JulianDate,
 	Math,
 	Matrix3,
 	Matrix4,
-	ParticleSystem,
-	Plane,
-	PostProcessStage,
-	PostProcessStageComposite,
 	PostProcessStageLibrary,
-	Quaternion,
-	ScreenSpaceEventHandler,
-	ScreenSpaceEventType,
 	SkyBox,
-	SphereEmitter,
 	Transforms,
-	TranslationRotationScale,
 	UrlTemplateImageryProvider,
-	VertexFormat,
 	Viewer,
-	MultiClippingPlaneCollection,
-	Ray,
 } from 'cesium';
 // import { createBuildingShader } from "./buildingsTexture";
 // import { Rain } from "./Rain";
@@ -48,9 +25,8 @@ import {
 // import CesiumNavigation from "cesium-navigation-es6";
 // import { ArcMode, createElectricArc } from "./createElectricArc";
 // import { HawkEye2DMap } from "./HawkEye2DMap";
-import { draw, enter, exit, remove, removeAll } from '../dev/ClippingPlane';
-import { TerrainClipPlan } from '../dev/clip';
-import VideoSynchronizer from 'cesium/Source/Core/VideoSynchronizer';
+import { draw, enter, exit, removeAll } from '../dev/ClippingPlane';
+// import { TerrainClipPlan } from '../dev/clip';
 
 Ion.defaultAccessToken =
 	'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlN2MzMWE5ZC0wYzkyLTQ3ODMtYmJlYy1iN2QxMWI4NjU3ODUiLCJpZCI6OTMzMjYsImlhdCI6MTY1MjI1MzYyN30.irrMfifWXXSjF_wHoeyjgkmjDHZ4LBnFL4hIZf-HSGg';
@@ -118,20 +94,20 @@ viewer.scene.screenSpaceCameraController.rotateEventTypes = [CameraEventType.LEF
 viewer.scene.screenSpaceCameraController.tiltEventTypes = [CameraEventType.RIGHT_DRAG];
 viewer.scene.screenSpaceCameraController.zoomEventTypes = [CameraEventType.WHEEL];
 
-function centerAtHome(x: number, y: number, z: number) {
-	if (z < 20000) {
-		z = 20000;
-	}
+// function centerAtHome(x: number, y: number, z: number) {
+// 	if (z < 20000) {
+// 		z = 20000;
+// 	}
 
-	viewer.camera.flyTo({
-		destination: Cartesian3.fromDegrees(x, y, z), //经度、纬度、高度
-		orientation: {
-			heading: 0,
-			pitch: Math.toRadians(-70.5 || -Math.PI_OVER_FOUR),
-			roll: Math.toRadians(360 || 0),
-		},
-	});
-}
+// 	viewer.camera.flyTo({
+// 		destination: Cartesian3.fromDegrees(x, y, z), //经度、纬度、高度
+// 		orientation: {
+// 			heading: 0,
+// 			pitch: Math.toRadians(-70.5 || -Math.PI_OVER_FOUR),
+// 			roll: Math.toRadians(360 || 0),
+// 		},
+// 	});
+// }
 
 //创建平移矩阵方法二
 // let scale = Cartesian3.fromArray([3,1,1]);
@@ -334,40 +310,40 @@ viewer.scene.preUpdate.addEventListener(function () {
 // 				},
 // });
 
-function addMouseOver(stage: PostProcessStage | PostProcessStageComposite) {
-	let handler = new ScreenSpaceEventHandler(viewer.scene.canvas);
-	handler.setInputAction(function (movement: ScreenSpaceEventHandler.MotionEvent) {
-		const pickedObject = viewer.scene.pick(movement.endPosition);
+// function addMouseOver(stage: PostProcessStage | PostProcessStageComposite) {
+// 	let handler = new ScreenSpaceEventHandler(viewer.scene.canvas);
+// 	handler.setInputAction(function (movement: ScreenSpaceEventHandler.MotionEvent) {
+// 		const pickedObject = viewer.scene.pick(movement.endPosition);
 
-		if (defined(pickedObject)) {
-			stage.selected = [pickedObject.primitive];
-		} else {
-			stage.selected = [];
-		}
-	}, ScreenSpaceEventType.MOUSE_MOVE);
-}
+// 		if (defined(pickedObject)) {
+// 			stage.selected = [pickedObject.primitive];
+// 		} else {
+// 			stage.selected = [];
+// 		}
+// 	}, ScreenSpaceEventType.MOUSE_MOVE);
+// }
 
 // addMouseOver(silhouette);
-function getPosition(viewer: Viewer) {
-	var cesiumViewer = viewer;
-	var canvas = cesiumViewer.scene.canvas;
-	// 定义当前场景的画布元素的事件处理
-	var handler = new ScreenSpaceEventHandler(canvas);
-	//设置鼠标移动事件的处理函数，这里负责监听x,y坐标值变化
-	handler.setInputAction(function (movement: any) {
-		let ray = viewer.camera.getPickRay(movement.position) as Ray;
-		let cartesian = viewer.scene.globe.pick(ray, viewer.scene) as Cartesian3;
-		let cartographic = Cartographic.fromCartesian(cartesian);
-		let lng = Math.toDegrees(cartographic.longitude); // 经度
-		let lat = Math.toDegrees(cartographic.latitude); // 纬度
-		let alt = cartographic.height; // 高度
-		let coordinate = {
-			longitude: Number(lng.toFixed(6)),
-			latitude: Number(lat.toFixed(6)),
-			altitude: Number(alt.toFixed(2)),
-		};
-	}, ScreenSpaceEventType.LEFT_DOUBLE_CLICK); //此枚举类型用于对鼠标事件进行分类:向下、向上、单击、双击、按住按钮时移动和移动。具体参考文档Cesium.ScreenSpaceEventType
-}
+// function getPosition(viewer: Viewer) {
+// 	var cesiumViewer = viewer;
+// 	var canvas = cesiumViewer.scene.canvas;
+// 	// 定义当前场景的画布元素的事件处理
+// 	var handler = new ScreenSpaceEventHandler(canvas);
+// 	//设置鼠标移动事件的处理函数，这里负责监听x,y坐标值变化
+// 	handler.setInputAction(function (movement: any) {
+// 		let ray = viewer.camera.getPickRay(movement.position) as Ray;
+// 		let cartesian = viewer.scene.globe.pick(ray, viewer.scene) as Cartesian3;
+// 		let cartographic = Cartographic.fromCartesian(cartesian);
+// 		let lng = Math.toDegrees(cartographic.longitude); // 经度
+// 		let lat = Math.toDegrees(cartographic.latitude); // 纬度
+// 		let alt = cartographic.height; // 高度
+// 		let coordinate = {
+// 			longitude: Number(lng.toFixed(6)),
+// 			latitude: Number(lat.toFixed(6)),
+// 			altitude: Number(alt.toFixed(2)),
+// 		};
+// 	}, ScreenSpaceEventType.LEFT_DOUBLE_CLICK); //此枚举类型用于对鼠标事件进行分类:向下、向上、单击、双击、按住按钮时移动和移动。具体参考文档Cesium.ScreenSpaceEventType
+// }
 // getPosition(viewer);
 
 const option: any = {};
@@ -411,16 +387,16 @@ option.zoomOutTooltip = '缩小';
 // hawkEyeMap._init();
 
 // 计算引擎(粒子发射器)位置矩阵
-function computeEmitterModelMatrix() {
-	//方向
-	let hpr = HeadingPitchRoll.fromDegrees(0.0, 0.0, 0.0, new HeadingPitchRoll());
-	var trs = new TranslationRotationScale();
+// function computeEmitterModelMatrix() {
+// 	//方向
+// 	let hpr = HeadingPitchRoll.fromDegrees(0.0, 0.0, 0.0, new HeadingPitchRoll());
+// 	var trs = new TranslationRotationScale();
 
-	//以modelMatrix(飞机)中心为原点的座标系的xyz轴位置偏移
-	trs.translation = Cartesian3.fromElements(2.5, 3.5, 1.0, new Cartesian3());
-	trs.rotation = Quaternion.fromHeadingPitchRoll(hpr, new Quaternion());
-	return Matrix4.fromTranslationRotationScale(trs, new Matrix4());
-}
+// 	//以modelMatrix(飞机)中心为原点的座标系的xyz轴位置偏移
+// 	trs.translation = Cartesian3.fromElements(2.5, 3.5, 1.0, new Cartesian3());
+// 	trs.rotation = Quaternion.fromHeadingPitchRoll(hpr, new Quaternion());
+// 	return Matrix4.fromTranslationRotationScale(trs, new Matrix4());
+// }
 
 // var particleSystem = viewer.scene.primitives.add(new ParticleSystem({
 //     image : '../Apps/SampleData/fire.png',
@@ -444,77 +420,77 @@ function computeEmitterModelMatrix() {
 //     // forces: [applyGravity]
 // }));
 
-function fireadd() {
-	var firejingdu = 116.6554885;
-	var fireweidu = 39.5454545;
-	var fireheight = 20;
-	var firedata;
-	var boolen = true;
-	//获取事件触发所在的  html Canvas容器
-	let firecanvas = viewer.scene.canvas;
-	var handler = new ScreenSpaceEventHandler(firecanvas);
-	handler.setInputAction(function (evt: any) {
-		var pickedObject = viewer.scene.pick(evt.position);
-		var cartesian = viewer.scene.pickPosition(evt.position);
-		if (defined(cartesian)) {
-			var cartographic = Cartographic.fromCartesian(cartesian);
-			var lng = Math.toDegrees(cartographic.longitude);
-			var lat = Math.toDegrees(cartographic.latitude);
-			// var height = cartographic.height; //模型高度
-			// var lat = 121.58566;
-			// var lng = 38.9129980676015;
-			var height = 2000;
-			firedata = new ParticleSystem({
-				// image: './file/texture/fire1.png',
-				startColor: Color.RED.withAlpha(0.7),
-				endColor: Color.YELLOW.withAlpha(0.3),
-				startScale: 10,
-				endScale: 10,
-				//设定粒子寿命可能持续时间的最小限值(以秒为单位)，在此限值之上将随机选择粒子的实际寿命。
-				minimumParticleLife: 1,
-				maximumParticleLife: 6,
-				minimumSpeed: 1,
-				maximumSpeed: 4,
-				imageSize: new Cartesian2(100, 10),
-				// Particles per second.
-				emissionRate: 4,
-				lifetime: 160.0,
-				// emitter: new CircleEmitter(5.0),
-				emitter: new SphereEmitter(5.0),
-				modelMatrix: Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(lng, lat, height)), //从模型转化成世界坐标
-			});
-			console.log(firedata.modelMatrix);
-			handler.setInputAction(function (click: any) {
-				boolen = false;
-			}, ScreenSpaceEventType.RIGHT_CLICK);
-			var firetileset1 = viewer.scene.primitives.add(firedata);
-			firetileset1.show = boolen;
-		}
-	}, ScreenSpaceEventType.LEFT_CLICK);
-}
+// function fireadd() {
+// 	var firejingdu = 116.6554885;
+// 	var fireweidu = 39.5454545;
+// 	var fireheight = 20;
+// 	var firedata;
+// 	var boolen = true;
+// 	//获取事件触发所在的  html Canvas容器
+// 	let firecanvas = viewer.scene.canvas;
+// 	var handler = new ScreenSpaceEventHandler(firecanvas);
+// 	handler.setInputAction(function (evt: any) {
+// 		var pickedObject = viewer.scene.pick(evt.position);
+// 		var cartesian = viewer.scene.pickPosition(evt.position);
+// 		if (defined(cartesian)) {
+// 			var cartographic = Cartographic.fromCartesian(cartesian);
+// 			var lng = Math.toDegrees(cartographic.longitude);
+// 			var lat = Math.toDegrees(cartographic.latitude);
+// 			// var height = cartographic.height; //模型高度
+// 			// var lat = 121.58566;
+// 			// var lng = 38.9129980676015;
+// 			var height = 2000;
+// 			firedata = new ParticleSystem({
+// 				// image: './file/texture/fire1.png',
+// 				startColor: Color.RED.withAlpha(0.7),
+// 				endColor: Color.YELLOW.withAlpha(0.3),
+// 				startScale: 10,
+// 				endScale: 10,
+// 				//设定粒子寿命可能持续时间的最小限值(以秒为单位)，在此限值之上将随机选择粒子的实际寿命。
+// 				minimumParticleLife: 1,
+// 				maximumParticleLife: 6,
+// 				minimumSpeed: 1,
+// 				maximumSpeed: 4,
+// 				imageSize: new Cartesian2(100, 10),
+// 				// Particles per second.
+// 				emissionRate: 4,
+// 				lifetime: 160.0,
+// 				// emitter: new CircleEmitter(5.0),
+// 				emitter: new SphereEmitter(5.0),
+// 				modelMatrix: Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(lng, lat, height)), //从模型转化成世界坐标
+// 			});
+// 			console.log(firedata.modelMatrix);
+// 			handler.setInputAction(function (click: any) {
+// 				boolen = false;
+// 			}, ScreenSpaceEventType.RIGHT_CLICK);
+// 			var firetileset1 = viewer.scene.primitives.add(firedata);
+// 			firetileset1.show = boolen;
+// 		}
+// 	}, ScreenSpaceEventType.LEFT_CLICK);
+// }
 
 // fireadd();
 
 /**
  * 地形开挖示例
  */
-let isClipping = false;
-const one = [
-	[121.58336853027344, 38.91507295013191],
-	[121.59916137695312, 38.970623120820174],
-	[121.57100891113281, 38.9994303704904],
-	[121.55401733398438, 38.96763959537609],
-	[121.5534, 38.938],
-];
+// let isClipping = false;
+// const one = [
+// 	[121.58336853027344, 38.91507295013191],
+// 	[121.59916137695312, 38.970623120820174],
+// 	[121.57100891113281, 38.9994303704904],
+// 	[121.55401733398438, 38.96763959537609],
+// 	[121.5534, 38.938],
+// ];
 
-const two = [
-	[121.4974, 38.9021],
-	[121.5295, 38.8753],
-	[121.5743, 38.8661],
-	[121.6132, 38.8963],
-	[121.542582, 38.958825],
-	[121.547712, 38.901201],
-];
+// const two = [
+// 	[121.4974, 38.9021],
+// 	[121.5295, 38.8753],
+// 	[121.5743, 38.8661],
+// 	[121.6132, 38.8963],
+// 	[121.542582, 38.958825],
+// 	[121.547712, 38.901201],
+// ];
 
 // const aaa = [];
 // two.forEach(

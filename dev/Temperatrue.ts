@@ -1,5 +1,5 @@
 import { Color, DataSource, GeoJsonDataSource, Viewer } from 'cesium';
-import { getVectorContour, drawCanvasContour } from 'kriging-contour';
+import { getVectorContour } from 'kriging-contour';
 
 export type GEOJSON_FEATURE = {
 	type: 'Feature';
