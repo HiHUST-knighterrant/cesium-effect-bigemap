@@ -281,20 +281,20 @@ let groundSkybox = new SkyBox({
 // 自带的默认天空盒
 let defaultSkyBox = viewer.scene.skyBox;
 
-// viewer.scene.preUpdate.addEventListener(function () {
-//   const e = viewer.camera.position;
-//   if (Cartographic.fromCartesian(e).height < 10000) {
-//     viewer.scene.skyBox.nearGround = true;
-//     viewer.scene.skyBox = groundSkybox;
-//     viewer.scene.skyAtmosphere.show = false;
-//   } else {
-//     viewer.scene.skyBox = defaultSkyBox;
-//     viewer.scene.skyAtmosphere.show = true;
-//   }
+viewer.scene.preUpdate.addEventListener(function () {
+  const e = viewer.camera.position;
+  if (Cartographic.fromCartesian(e).height < 10000) {
+    viewer.scene.skyBox.nearGround = true;
+    viewer.scene.skyBox = groundSkybox;
+    viewer.scene.skyAtmosphere.show = false;
+  } else {
+    viewer.scene.skyBox = defaultSkyBox;
+    viewer.scene.skyAtmosphere.show = true;
+  }
 
 //   line_material.uniforms.time = ((performance.now() - line_material.uniforms.time) % 1000) / 1000;
 
-// });
+});
 
 // function getAllProperty (feature:any) {
 //     var propertyNames = feature.getPropertyNames()
@@ -557,6 +557,7 @@ const two = [
 
 // console.log(3333);
 
+// 挖方
 enter(viewer, { edgeWidth: 5, edgeColor: Color.RED });
 document.onkeyup = function (event) {
 	if (event.key === 'z') removeAll();
@@ -567,6 +568,8 @@ document.onkeyup = function (event) {
 	if (event.key === 'e') exit();
 };
 
+
+// 绘制等值面
 import { draw as temperatrue_draw } from '../dev/Temperatrue';
 
 const mapCenter = [121.58, 38.91];
