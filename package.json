@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "cesium": "^1.92.0",
-    "cesium-navigation-es6": "^3.0.8"
+    "cesium-navigation-es6": "^3.0.8",
+    "kriging-contour": "^1.0.5"
   }
 }
