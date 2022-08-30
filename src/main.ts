@@ -7,6 +7,8 @@ import {
 	createWorldTerrain,
 	Ellipsoid,
 	EventHelper,
+	ExperimentalFeatures,
+	GeographicTilingScheme,
 	Ion,
 	Math,
 	Matrix3,
@@ -45,7 +47,7 @@ const viewer = new Viewer('canvas', {
 	//   requestVertexNormals: true
 	// }),
 	animation: false, //是否显示动画控件
-	baseLayerPicker: false, //是否显示图层选择控件
+	baseLayerPicker: true, //是否显示图层选择控件
 	geocoder: false, //是否显示地名查找控件
 	timeline: false, //是否显示时间线控件
 	sceneModePicker: false, //是否显示投影方式控件
@@ -63,7 +65,7 @@ const viewer = new Viewer('canvas', {
 viewer.scene.globe.depthTestAgainstTerrain = true;
 viewer.scene.debugShowFramesPerSecond = true;
 (viewer.cesiumWidget.creditContainer as HTMLElement).style.display = 'none';
-// ExperimentalFeatures.enableModelExperimental = true;
+ExperimentalFeatures.enableModelExperimental = true;
 
 if (!PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)) {
 	window.alert('This browser does not support the silhouette post process.');
@@ -118,7 +120,7 @@ let tileset: Cesium3DTileset = viewer.scene.primitives.add(
 		url: 'file/build/tileset.json', //数据地址
 		maximumScreenSpaceError: 2, //最大的屏幕空间误差
 		// modelMatrix:m,
-		show: false,
+		show: true,
 	})
 );
 
@@ -233,7 +235,7 @@ tileset.readyPromise.then(function (tileset) {
 	// createElectricArc(viewer, boundingSphere.center, ArcMode.Down, false, new Color(0., .88, 0.233, 1.));
 });
 
-// tileset.customShader = createBuildingShader();
+tileset.customShader = createBuildingShaderNight();
 // createWay(viewer);
 // new Rain(viewer, {
 //   tiltAngle: 0.6, //倾斜角度
@@ -258,18 +260,17 @@ let groundSkybox = new SkyBox({
 let defaultSkyBox = viewer.scene.skyBox;
 
 viewer.scene.preUpdate.addEventListener(function () {
-  const e = viewer.camera.position;
-  if (Cartographic.fromCartesian(e).height < 10000) {
-    viewer.scene.skyBox.nearGround = true;
-    viewer.scene.skyBox = groundSkybox;
-    viewer.scene.skyAtmosphere.show = false;
-  } else {
-    viewer.scene.skyBox = defaultSkyBox;
-    viewer.scene.skyAtmosphere.show = true;
-  }
+	const e = viewer.camera.position;
+	if (Cartographic.fromCartesian(e).height < 10000) {
+		viewer.scene.skyBox.nearGround = true;
+		viewer.scene.skyBox = groundSkybox;
+		viewer.scene.skyAtmosphere.show = false;
+	} else {
+		viewer.scene.skyBox = defaultSkyBox;
+		viewer.scene.skyAtmosphere.show = true;
+	}
 
-//   line_material.uniforms.time = ((performance.now() - line_material.uniforms.time) % 1000) / 1000;
-
+	//   line_material.uniforms.time = ((performance.now() - line_material.uniforms.time) % 1000) / 1000;
 });
 
 // function getAllProperty (feature:any) {
@@ -544,7 +545,6 @@ document.onkeyup = function (event) {
 	if (event.key === 'e') exit();
 };
 
-
 // 绘制等值面
 import { draw as temperatrue_draw } from '../dev/Temperatrue';
 
@@ -559,8 +559,14 @@ for (let i = 0; i < 100; i++) {
 	});
 }
 
-temperatrue_draw(viewer, dataset, [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100], {
-	lon_flag: 'lng',
-	lat_flag: 'lat',
-	value_flag: 'value',
-}).then(v => console.log(v));
+// temperatrue_draw(viewer, dataset, [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100], {
+// 	lon_flag: 'lng',
+// 	lat_flag: 'lat',
+// 	value_flag: 'value',
+// }).then(v => console.log(v));
+
+// 夜视效果
+import { enableNightVision } from '../dev/PostProcess';
+import { createBuildingShaderFlood, createBuildingShaderNight } from './buildingsTexture';
+import WebMapTileServiceImageryProvider from 'cesium/Source/Scene/WebMapTileServiceImageryProvider';
+// enableNightVision(viewer);

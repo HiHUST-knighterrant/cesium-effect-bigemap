@@ -1,6 +1,13 @@
-import { Cartesian3, Cesium3DTileStyle, createOsmBuildings, CustomShader, LightingModel, Math, TextureUniform, UniformType, VaryingType } from "cesium"
+import {
+	CustomShader,
+	LightingModel,
+	TextureUniform,
+	UniformType,
+	VaryingType,
+} from 'cesium';
+import wall_url from '../file/texture/wall.png';
 
-let createBuildingShader = () => {
+let createBuildingShaderFlood = () => {
 	return new CustomShader({
 		lightingModel: LightingModel.UNLIT,
 
@@ -23,60 +30,47 @@ let createBuildingShader = () => {
 			}	 	
 			`,
 	});
+};
 
-}
+const createBuildingShaderNight = () => {
+	return new CustomShader({
+		lightingModel: LightingModel.UNLIT,
+		varyings: {
+			v_normalMC: VaryingType.VEC3,
+		},
+		uniforms: {
+			u_texture: {
+				value: new TextureUniform({
+					url: wall_url,
+				}),
+				type: UniformType.SAMPLER_2D,
+			},
+		},
+		vertexShaderText: /* glsl */ `
+void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
+  v_normalMC = vsInput.attributes.normalMC;
+}`,
+		fragmentShaderText: /* glsl */ `
+void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+  vec3 positionMC = fsInput.attributes.positionMC;
+  float width = 50.0;
+  float height = 5.0;
+  if (dot(vec3(0.0, 1.0, 0.0), v_normalMC) > 0.95) {
+    material.diffuse = vec3(0.079, 0.107, 0.111);
+  } else {
+    float textureX = 0.0;
+    float dotXAxis = dot(vec3(1.0, 0.0, 0.0), v_normalMC);
+    if (dotXAxis > 0.52 || dotXAxis < -0.52) {
+        textureX = mod(positionMC.x, width) / width;
+    } else {
+        textureX = mod(positionMC.z, width) / width;
+    }
+    float textureY = mod(positionMC.y, height) / height;
+    vec3 rgb = texture2D(u_texture, vec2(textureX, textureY)).rgb;
 
-// const createBuildingShader = () => {
-//   return new CustomShader({
-//     lightingModel: LightingModel.UNLIT,
-//     varyings: {
-//       v_normalMC: VaryingType.VEC3
-//     },
-//     uniforms: {
-//       u_texture: {
-//         value: new TextureUniform({
-//           url: 'file/texture/wall.png',
-//         }),
-//         type: UniformType.SAMPLER_2D
-//       }
-//     },
-//     vertexShaderText: /* glsl */ `
-// void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
-//   v_normalMC = vsInput.attributes.normalMC;
-// }`,
-//     fragmentShaderText: /* glsl */ `
-// void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
-//   vec3 positionMC = fsInput.attributes.positionMC;
-//   float width = 50.0;
-//   float height = 5.0;
-//   if (dot(vec3(0.0, 1.0, 0.0), v_normalMC) > 0.95) {
-//     material.diffuse = vec3(0.079, 0.107, 0.111);
-
-//     return;
-//   } else {
-//     float textureX = 0.0;
-//     float dotXAxis = dot(vec3(1.0, 0.0, 0.0), v_normalMC);
-//     if (dotXAxis > 0.52 || dotXAxis < -0.52) {
-//         textureX = mod(positionMC.x, width) / width;
-//     } else {
-//         textureX = mod(positionMC.z, width) / width;
-//     }
-//     float textureY = mod(positionMC.y, height) / height;
-//     // vec3 rgb = texture2D(u_texture, vec2(textureX, textureY)).rgb;
-
-//     // material.diffuse = rgb;
-
-//     if (positionMC.y > 6.66) {
-//       material.diffuse = vec3(0.,1.,1.);
-//     } else {
-//       material.diffuse = vec3(0.,0.55,0.55);
-//     }
-//     // material.diffuse = vec3(0.,1.,1.) * vec3(0.,textureX,textureY);
-
-//     return;
-//   }
-//   material.diffuse = vec3(0.129, 0.157, 0.161);
-// }`
-//   })
-// }
-export { createBuildingShader }
+    material.diffuse = rgb;
+  }
+}`,
+	});
+};
+export { createBuildingShaderFlood, createBuildingShaderNight };
