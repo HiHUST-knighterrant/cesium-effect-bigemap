@@ -15,6 +15,7 @@
     "vite": "^2.9.9"
   },
   "dependencies": {
+    "@turf/turf": "^6.5.0",
     "cesium": "^1.92.0",
     "cesium-navigation-es6": "^3.0.8",
     "kriging-contour": "^1.0.5"

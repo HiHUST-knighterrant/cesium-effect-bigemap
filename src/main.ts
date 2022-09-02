@@ -6,6 +6,7 @@ import {
 	Color,
 	createWorldTerrain,
 	Ellipsoid,
+	EllipsoidTerrainProvider,
 	EventHelper,
 	ExperimentalFeatures,
 	GeographicTilingScheme,
@@ -13,6 +14,7 @@ import {
 	Math,
 	Matrix3,
 	Matrix4,
+	NearFarScalar,
 	PostProcessStageLibrary,
 	SkyBox,
 	Transforms,
@@ -41,13 +43,13 @@ const base = new UrlTemplateImageryProvider({
 });
 
 const viewer = new Viewer('canvas', {
-	terrainProvider: createWorldTerrain({ requestVertexNormals: true, requestWaterMask: true }),
+	// terrainProvider: createWorldTerrain({ requestVertexNormals: true, requestWaterMask: true }),
 	// terrainProvider: new CesiumTerrainProvider({
 	//   url: IonResource.fromAssetId(3956),
 	//   requestVertexNormals: true
 	// }),
 	animation: false, //是否显示动画控件
-	baseLayerPicker: true, //是否显示图层选择控件
+	baseLayerPicker: false, //是否显示图层选择控件
 	geocoder: false, //是否显示地名查找控件
 	timeline: false, //是否显示时间线控件
 	sceneModePicker: false, //是否显示投影方式控件
@@ -120,7 +122,7 @@ let tileset: Cesium3DTileset = viewer.scene.primitives.add(
 		url: 'file/build/tileset.json', //数据地址
 		maximumScreenSpaceError: 2, //最大的屏幕空间误差
 		// modelMatrix:m,
-		show: true,
+		show: false,
 	})
 );
 
@@ -235,7 +237,7 @@ tileset.readyPromise.then(function (tileset) {
 	// createElectricArc(viewer, boundingSphere.center, ArcMode.Down, false, new Color(0., .88, 0.233, 1.));
 });
 
-tileset.customShader = createBuildingShaderNight();
+// tileset.customShader = createBuildingShaderNight();
 // createWay(viewer);
 // new Rain(viewer, {
 //   tiltAngle: 0.6, //倾斜角度
@@ -566,7 +568,44 @@ for (let i = 0; i < 100; i++) {
 // }).then(v => console.log(v));
 
 // 夜视效果
-import { enableNightVision } from '../dev/PostProcess';
+import { enableBloom, enableNightVision } from '../dev/PostProcess';
 import { createBuildingShaderFlood, createBuildingShaderNight } from './buildingsTexture';
 import WebMapTileServiceImageryProvider from 'cesium/Source/Scene/WebMapTileServiceImageryProvider';
+import { gltf_loader } from './FloodModelGLTF';
 // enableNightVision(viewer);
+
+// 加载gltf模型
+// gltf_loader(viewer, '../file/model/scene.glb', 121.58, 38.912, 10, Color.YELLOW);
+
+// 行政划分 数据统计
+const population = {
+	成都市: 100,
+	自贡市: 100,
+	攀枝花市: 100,
+	泸州市: 100,
+	德阳市: 200,
+	绵阳市: 203,
+	广元市: 203,
+	遂宁市: 222,
+	内江市: 300,
+	乐山市: 400,
+	南充市: 500,
+	眉山市: 2000,
+	宜宾市: 2002,
+	广安市: 250,
+	达州市: 280,
+	雅安市: 290,
+	巴中市: 700,
+	资阳市: 900,
+	阿坝藏族羌族自治州: 500,
+	甘孜藏族自治州: 230,
+	凉山彝族自治州: 770,
+};
+import geojson from '../file/vector_data/510000.geojson?raw';
+// import geojson from '../file/vector_data/sichuan.geojson?raw';
+// import { add } from '../dev/administrative-region';
+// add(viewer, JSON.parse(geojson), population, 'name');
+
+// 行政遮罩
+import { add } from '../dev/administrative-shade';
+add(viewer, JSON.parse(geojson).features[0].geometry.coordinates[0][0]);
