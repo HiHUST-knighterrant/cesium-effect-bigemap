@@ -23,7 +23,7 @@ import {
 } from 'cesium';
 // import { createBuildingShader } from "./buildingsTexture";
 // import { Rain } from "./Rain";
-// import spaceLine from "./SpaceLine";
+import spaceLine from './SpaceLine';
 // import createWay, { line_material } from "./way2";
 
 // import CesiumNavigation from "cesium-navigation-es6";
@@ -78,7 +78,6 @@ var helper = new EventHelper();
 const RemoveCallback = helper.add(viewer.scene.globe.tileLoadProgressEvent, function (event) {
 	if (event == 0) {
 		// centerAtHome(121.59146, 38.82354, 20);
-
 		// getPosition(viewer);
 		// viewer.scene.camera.flyTo({
 		//   destination: Cartesian3.fromDegrees(-74.019, 40.6912, 750),
@@ -122,9 +121,65 @@ let tileset: Cesium3DTileset = viewer.scene.primitives.add(
 		url: 'file/build/tileset.json', //数据地址
 		maximumScreenSpaceError: 2, //最大的屏幕空间误差
 		// modelMatrix:m,
-		show: false,
+		show: true,
 	})
 );
+tileset.readyPromise.then(function (tileset) {
+	const boundingSphere = tileset.boundingSphere;
+	update3dtiles(tileset, { origin: boundingSphere.center, scalez: 15, translation: { x: 0, y: 0, z: -5 } });
+	let cartographic = Ellipsoid.WGS84.cartesianToCartographic(boundingSphere.center);
+	let lat = Math.toDegrees(cartographic.latitude);
+	let lng = Math.toDegrees(cartographic.longitude);
+	console.log(lng, lat);
+
+	// let rainSystem: ParticleSystem;
+	// var rainParticleSize = 15.0;
+	// var rainRadius = 100000.0;
+	// var rainImageSize = new Cartesian2(rainParticleSize, rainParticleSize * 2.0);
+	// var rainGravityScratch = new Cartesian3();
+	// var rainUpdate = function (particle: any, dt: any) {
+	//   rainGravityScratch = Cartesian3.normalize(particle.position, rainGravityScratch);
+	//   rainGravityScratch = Cartesian3.multiplyByScalar(rainGravityScratch, -1050.0, rainGravityScratch);
+	//   particle.position = Cartesian3.add(particle.position, rainGravityScratch, particle.position);
+	//   var distance = Cartesian3.distance(viewer.scene.camera.position, particle.position);
+	//   if (distance > rainRadius) {
+	//     particle.endColor.alpha = 0.0;
+	//   } else {
+	//     particle.endColor.alpha = rainSystem.endColor.alpha / (distance / rainRadius + 0.1);
+	//   }
+	// };
+	// rainSystem = new ParticleSystem({
+	//   modelMatrix: Matrix4.fromTranslation(viewer.scene.camera.position),
+	//   speed: -1.0,
+	//   lifetime: 15.0,
+	//   emitter: new SphereEmitter(rainRadius),
+	//   startScale: 1.0,
+	//   endScale: 0.0,
+	//   image: './file/texture/fire.png',
+	//   emissionRate: 9000.0,
+	//   startColor: new Color(0.27, 0.5, 0.70, 0.0),
+	//   endColor: new Color(0.27, 0.5, 0.70, 0.98),
+	//   imageSize: rainImageSize,
+	//   updateCallback: rainUpdate
+	// });
+	// console.log(rainSystem);
+	// viewer.scene.primitives.add(rainSystem);
+
+	// 121.5856611728515 38.9129980676015
+	spaceLine(viewer, [lng, lat]);
+	// createElectricArc(viewer, boundingSphere.center, ArcMode.Bothway, true, new Color(0.33, .44, 0.66, 1.));
+	// createElectricArc(viewer, boundingSphere.center, ArcMode.Down, false, new Color(0., .88, 0.233, 1.));
+});
+
+// 泛光3dtiles
+export const d5 = () => {
+	tileset.customShader = createBuildingShaderFlood();
+};
+
+// 夜晚3dtiles
+export const d4 = () => {
+	tileset.customShader = createBuildingShaderNight();
+};
 
 // 修改3dtiles位置
 /*  var opt = {
@@ -190,54 +245,6 @@ function update3dtiles(tileset: Cesium3DTileset, opt: any) {
 	tileset.root.transform = mtx;
 }
 
-tileset.readyPromise.then(function (tileset) {
-	const boundingSphere = tileset.boundingSphere;
-	update3dtiles(tileset, { origin: boundingSphere.center, scalez: 15, translation: { x: 0, y: 0, z: -5 } });
-	let cartographic = Ellipsoid.WGS84.cartesianToCartographic(boundingSphere.center);
-	let lat = Math.toDegrees(cartographic.latitude);
-	let lng = Math.toDegrees(cartographic.longitude);
-	console.log(lng, lat);
-
-	// let rainSystem: ParticleSystem;
-	// var rainParticleSize = 15.0;
-	// var rainRadius = 100000.0;
-	// var rainImageSize = new Cartesian2(rainParticleSize, rainParticleSize * 2.0);
-	// var rainGravityScratch = new Cartesian3();
-	// var rainUpdate = function (particle: any, dt: any) {
-	//   rainGravityScratch = Cartesian3.normalize(particle.position, rainGravityScratch);
-	//   rainGravityScratch = Cartesian3.multiplyByScalar(rainGravityScratch, -1050.0, rainGravityScratch);
-	//   particle.position = Cartesian3.add(particle.position, rainGravityScratch, particle.position);
-	//   var distance = Cartesian3.distance(viewer.scene.camera.position, particle.position);
-	//   if (distance > rainRadius) {
-	//     particle.endColor.alpha = 0.0;
-	//   } else {
-	//     particle.endColor.alpha = rainSystem.endColor.alpha / (distance / rainRadius + 0.1);
-	//   }
-	// };
-	// rainSystem = new ParticleSystem({
-	//   modelMatrix: Matrix4.fromTranslation(viewer.scene.camera.position),
-	//   speed: -1.0,
-	//   lifetime: 15.0,
-	//   emitter: new SphereEmitter(rainRadius),
-	//   startScale: 1.0,
-	//   endScale: 0.0,
-	//   image: './file/texture/fire.png',
-	//   emissionRate: 9000.0,
-	//   startColor: new Color(0.27, 0.5, 0.70, 0.0),
-	//   endColor: new Color(0.27, 0.5, 0.70, 0.98),
-	//   imageSize: rainImageSize,
-	//   updateCallback: rainUpdate
-	// });
-	// console.log(rainSystem);
-	// viewer.scene.primitives.add(rainSystem);
-
-	// 121.5856611728515 38.9129980676015
-	// spaceLine(viewer, [lng, lat]);
-	// createElectricArc(viewer, boundingSphere.center, ArcMode.Bothway, true, new Color(0.33, .44, 0.66, 1.));
-	// createElectricArc(viewer, boundingSphere.center, ArcMode.Down, false, new Color(0., .88, 0.233, 1.));
-});
-
-// tileset.customShader = createBuildingShaderNight();
 // createWay(viewer);
 // new Rain(viewer, {
 //   tiltAngle: 0.6, //倾斜角度
@@ -572,7 +579,9 @@ import { enableBloom, enableNightVision } from '../dev/PostProcess';
 import { createBuildingShaderFlood, createBuildingShaderNight } from './buildingsTexture';
 import WebMapTileServiceImageryProvider from 'cesium/Source/Scene/WebMapTileServiceImageryProvider';
 import { gltf_loader } from './FloodModelGLTF';
-// enableNightVision(viewer);
+export const d3 = () => {
+	enableNightVision(viewer);
+};
 
 // 加载gltf模型
 // gltf_loader(viewer, '../file/model/scene.glb', 121.58, 38.912, 10, Color.YELLOW);
@@ -603,9 +612,13 @@ const population = {
 };
 import geojson from '../file/vector_data/510000.geojson?raw';
 // import geojson from '../file/vector_data/sichuan.geojson?raw';
-// import { add } from '../dev/administrative-region';
-// add(viewer, JSON.parse(geojson), population, 'name');
+import { add as add2 } from '../dev/administrative-region';
+export const d2 = () => {
+	add2(viewer, JSON.parse(geojson), population, 'name');
+};
 
 // 行政遮罩
-import { add } from '../dev/administrative-shade';
-add(viewer, JSON.parse(geojson).features[0].geometry.coordinates[0][0]);
+import { add as add1 } from '../dev/administrative-shade';
+export const d1 = () => {
+	add1(viewer, JSON.parse(geojson).features[0].geometry.coordinates[0][0]);
+};
