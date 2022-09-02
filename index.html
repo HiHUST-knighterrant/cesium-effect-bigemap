@@ -4,12 +4,15 @@
 		<meta charset="UTF-8" />
 		<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link href="https://cesium.com/downloads/cesiumjs/releases/1.95/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
 		<title>Vite App</title>
 	</head>
 	<body>
 		<script type="module">
-			window.CESIUM_BASE_URL = './node_modules/cesium/Source/';
-			import 'cesium/Build/Cesium/Widgets/widgets.css';
+			// window.CESIUM_BASE_URL = './node_modules/cesium/Source/';
+			window.CESIUM_BASE_URL = 'http://localhost:3000/dist/cesium/Source/';
+			// import 'cesium/Build/Cesium/Widgets/widgets.css';
+			// import '/dist/cesium/Build/Cesium/Widgets/widgets.css';
 		</script>
 		<!-- <script type="module" src="__INDEX__"></script> -->
 
