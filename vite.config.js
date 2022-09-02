@@ -50,9 +50,11 @@ export default {
     _initHTMLPlugin(),
   ],
   define: {
-    'process.env.VITE_ENV': `'${process.env.VITE_ENV}'`
+    'process.env.VITE_ENV': `'${process.env.VITE_ENV}'`,
+    'process.env.CESIUM_BASE_URL': JSON.stringify(process.env.CESIUM_BASE_URL || 'http://localhost:3000/'),
+    'window.CESIUM_BASE_URL':  'http://localhost:3000/',
   },
   optimizeDeps: {
-    exclude: ['__INDEX__'] // 排除 __INDEX__
+    exclude: ['__INDEX__'], // 排除 __INDEX__
   },
 }
