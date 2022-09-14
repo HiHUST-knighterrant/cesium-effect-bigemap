@@ -33,7 +33,7 @@ const createWay = async (viewer: Viewer) => {
     let line_globel: number[][] = [];
     data.features.forEach(
         (i: any,index:number) => {
-            if (index > 600) return;
+            // if (index > 600) return;
             if (i.geometry.type === "LineString") {
                 if (line_globel.length < 20) {
                     line_globel.push.apply(line_globel, i.geometry.coordinates);

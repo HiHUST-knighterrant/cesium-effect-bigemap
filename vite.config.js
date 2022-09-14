@@ -7,12 +7,11 @@ let mode;
 const transformIndexHtml = (code) => {
   switch (mode) {
     case 'staging':
-      return code.replace(/__INDEX__/, `dist/${_build_package_name}.${_build_package_format[0]}.js`)   // 生产环境
-    default:
-      return code.replace(/__INDEX__/, 'src/main.ts')    // 开发环境
+      return code.replace(/\.\.\/Src\/main/, `../Dist/${_build_package_name}.${_build_package_format[0]}`)   // 生产环境
   }
 }
 
+const fileRegex = /Example\/[^]+\.ts$/;
 const _initHTMLPlugin = () => {
   return {
     name: 'initHTMLPlugin',
@@ -23,7 +22,8 @@ const _initHTMLPlugin = () => {
       mode = resolvedConfig.mode;
     },
     transform(code, id) {
-      if (id.endsWith('.html')) {
+      // if (id.endsWith('.html')) {
+      if (fileRegex.test(id)) {
         return { code: transformIndexHtml(code), map: null }
       }
     },
@@ -37,22 +37,23 @@ export default {
     hmr: false
   },
   build: {
+    outDir: "Dist",
     lib: {
-      entry: path.resolve(__dirname, "src/main.ts"),
+      entry: path.resolve(__dirname, "Src/main.ts"),
       name: _build_package_name,
       formats: _build_package_format,
       fileName: (format) => `cesium-effect-bigemap.${format}.js`
     },
     sourcemap: true
   },
-
+  publicDir: "Public",
   plugins: [
     _initHTMLPlugin(),
   ],
   define: {
     'process.env.VITE_ENV': `'${process.env.VITE_ENV}'`,
-    'process.env.CESIUM_BASE_URL': JSON.stringify(process.env.CESIUM_BASE_URL || 'http://localhost:3000/'),
-    'window.CESIUM_BASE_URL':  'http://localhost:3000/',
+    // 'process.env.CESIUM_BASE_URL': JSON.stringify(process.env.CESIUM_BASE_URL || 'http://localhost:3000/'),
+    // 'window.CESIUM_BASE_URL':  'http://localhost:3000/',
   },
   optimizeDeps: {
     exclude: ['__INDEX__'], // 排除 __INDEX__

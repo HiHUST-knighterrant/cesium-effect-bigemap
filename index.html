@@ -4,29 +4,19 @@
 		<meta charset="UTF-8" />
 		<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<link href="https://cesium.com/downloads/cesiumjs/releases/1.95/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+		<!-- <link href="https://cesium.com/downloads/cesiumjs/releases/1.95/Build/Cesium/Widgets/widgets.css" rel="stylesheet"> -->
 		<title>Vite App</title>
 	</head>
 	<body>
-		<script type="module">
-			// window.CESIUM_BASE_URL = './node_modules/cesium/Source/';
-			window.CESIUM_BASE_URL = 'http://localhost:3000/dist/cesium/Source/';
-			// import 'cesium/Build/Cesium/Widgets/widgets.css';
+		<!-- <script type = "module" src="./index.ts"></script> -->
+		<!-- <script type="module">
+			window.CESIUM_BASE_URL = './node_modules/cesium/Source/';
+			// window.CESIUM_BASE_URL = 'http://localhost:3000/dist/cesium/Source/';
+			import 'cesium/Build/Cesium/Widgets/widgets.css';
 			// import '/dist/cesium/Build/Cesium/Widgets/widgets.css';
-		</script>
+		</script> -->
 		<!-- <script type="module" src="__INDEX__"></script> -->
-
-		<script type="module">
-			import * as map from './dist/cesium-effect-bigemap.es.js';
-			/**
-			 * d1 行政区域突出显示
-			 * d2 行政区域划分数据展示
-			 * d3 夜视效果
-			 * d4 3dtiles夜景贴图
-			 * d5 3dtiles泛光贴图
-			 **/
-			map.d5();
-		</script>
+		<script type="module" , src="/index.ts"></script>
 		<div id="canvas"></div>
 	</body>
 </html>

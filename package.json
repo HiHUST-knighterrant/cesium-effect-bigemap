@@ -16,8 +16,10 @@
   },
   "dependencies": {
     "@turf/turf": "^6.5.0",
+    "@types/dat.gui": "^0.7.7",
     "cesium": "^1.92.0",
     "cesium-navigation-es6": "^3.0.8",
+    "dat.gui": "^0.7.9",
     "kriging-contour": "^1.0.5"
   }
 }
