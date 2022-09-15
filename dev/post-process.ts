@@ -1,3 +1,4 @@
+import './init';
 import { PostProcessStageComposite, PostProcessStageLibrary, Viewer } from 'cesium';
 
 let _night_vision_stage: PostProcessStageComposite;

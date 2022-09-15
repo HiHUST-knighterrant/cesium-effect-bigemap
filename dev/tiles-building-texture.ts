@@ -1,3 +1,4 @@
+import './init';
 import {
 	Cartesian4,
 	Cesium3DTileset,

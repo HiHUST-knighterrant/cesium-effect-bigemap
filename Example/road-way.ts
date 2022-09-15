@@ -1,15 +1,14 @@
 import { Color, GeoJsonDataSource, Viewer } from 'cesium';
 import { BMRoadWay, BMRoadWayStyle } from '../Src/main';
+// import { BMRoadWay, BMRoadWayStyle } from '../Dist/cesium-effect-bigemap.es';
 import { GUI } from 'dat.gui';
 
 let _data_source: GeoJsonDataSource;
 let _style_$1: BMRoadWayStyle;
-let _style_$2: BMRoadWayStyle;
 let _color: Color;
 const _loadTestData = async () => {
 	_data_source = await GeoJsonDataSource.load('../File/Model/way.geojson');
 	_style_$1 = BMRoadWayStyle.through;
-	_style_$2 = BMRoadWayStyle.twinkle;
 	_color = new Color(0, 1, 0, 1);
 };
 

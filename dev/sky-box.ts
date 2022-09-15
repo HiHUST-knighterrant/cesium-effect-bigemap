@@ -1,3 +1,4 @@
+import './init';
 import { Cartographic, SkyBox as CesiumSkyBox, Viewer } from 'cesium';
 
 export class SkyBox {

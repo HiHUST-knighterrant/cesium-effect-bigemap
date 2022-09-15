@@ -1,3 +1,4 @@
+import './init';
 import { Color, GeoJsonDataSource, getTimestamp, Viewer } from 'cesium';
 import { getVectorContour } from 'kriging-contour';
 

@@ -1,19 +1,15 @@
+import './init';
 import {
 	Color,
 	GeoJsonDataSource,
 	GeometryInstance,
 	GroundPolylineGeometry,
 	GroundPolylinePrimitive,
-	GroundPrimitive,
 	JulianDate,
 	Material,
-	PolylineCollection,
 	PolylineMaterialAppearance,
-	Primitive,
-	PrimitiveCollection,
 	Viewer,
 } from 'cesium';
-import Intersections2D from 'cesium/Source/Core/Intersections2D';
 
 export enum Style {
 	through,
@@ -121,7 +117,7 @@ export class RoadWay {
 		this._speed = options && options.speed ? options.speed : 3;
 		this._width = options && options.width ? options.width : 1;
 		this._color = options && options.color ? options.color : Color.fromRandom().withAlpha(1);
-	
+
 		const instances: GeometryInstance[] = [];
 		data_source.entities.values.forEach(entity => {
 			entity.polyline &&

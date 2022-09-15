@@ -6,6 +6,19 @@ declare global {
 window.CESIUM_BASE_URL = './node_modules/cesium/Source/';
 // window.CESIUM_BASE_URL = 'http://localhost:3000/dist/cesium/Source/';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
+
+import { example as exampleRoadWay } from './Example/road-way';
+import { example as exampleElectricArc } from './Example/electric-arc';
+import { example as examplePostProcess } from './Example/post-process';
+import { example as exampleSkyBox } from './Example/sky-box';
+import { example as exampleSpaceLine } from './Example/space-line';
+import { example as exampleTemperatrue } from './Example/temperatrue';
+import { example as exampleTilesBuildingTexture } from './Example/tiles-building-texture';
+import { example as exampleClippingPlane } from './Example/clipping-plane';
+
+import { GUI } from 'dat.gui';
+const gui = new GUI();
+
 import {
 	CameraEventType,
 	Cartesian3,
@@ -53,9 +66,6 @@ viewer.scene.screenSpaceCameraController.rotateEventTypes = [CameraEventType.LEF
 viewer.scene.screenSpaceCameraController.tiltEventTypes = [CameraEventType.RIGHT_DRAG];
 viewer.scene.screenSpaceCameraController.zoomEventTypes = [CameraEventType.WHEEL];
 
-import { GUI } from 'dat.gui';
-const gui = new GUI();
-
 const helper = new EventHelper();
 helper.add(viewer.scene.globe.tileLoadProgressEvent, e => {
 	if (e == 0) {
@@ -72,15 +82,6 @@ helper.add(viewer.scene.globe.tileLoadProgressEvent, e => {
 		helper.removeAll();
 	}
 });
-
-import { example as exampleRoadWay } from './Example/road-way';
-import { example as exampleElectricArc } from './Example/electric-arc';
-import { example as examplePostProcess } from './Example/post-process';
-import { example as exampleSkyBox } from './Example/sky-box';
-import { example as exampleSpaceLine } from './Example/space-line';
-import { example as exampleTemperatrue } from './Example/temperatrue';
-import { example as exampleTilesBuildingTexture } from './Example/tiles-building-texture';
-import { example as exampleClippingPlane } from './Example/clipping-plane';
 
 exampleRoadWay(viewer, gui);
 exampleElectricArc(viewer, gui);

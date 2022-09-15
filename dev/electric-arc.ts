@@ -1,3 +1,4 @@
+import './init';
 import {
 	Cartesian3,
 	Color,
