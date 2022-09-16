@@ -1472,7 +1472,7 @@ const _createBottomSurface = (e: number[]) => {
 			fabric: {
 				type: 'Image',
 				uniforms: {
-					image: '../file/texture/poly-soil.jpg',
+					image: '../File/Texture/poly-soil.jpg',
 				},
 			},
 		}),
@@ -1514,7 +1514,7 @@ const _createWellWall = function (position: Cartesian3[][], min_heights: number[
 		fabric: {
 			type: 'Image',
 			uniforms: {
-				image: '../file/texture/poly-stone.jpg',
+				image: '../File/Texture/poly-stone.jpg',
 			},
 		},
 	});
