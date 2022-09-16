@@ -1543,8 +1543,8 @@ const _drawDebugLine = (v: [Cartesian2, Cartesian2] | [Cartesian3, Cartesian3], 
 			polyline: new PolylineGraphics({
 				show: true,
 				positions: [
-					Cartesian3.fromRadians(car0.longitude, car0.latitude,1000),
-					Cartesian3.fromRadians(car1.longitude, car1.latitude,1000),
+					Cartesian3.fromRadians(car0.longitude, car0.latitude),
+					Cartesian3.fromRadians(car1.longitude, car1.latitude),
 				],
 				width: 7.5,
 				material: dotted
