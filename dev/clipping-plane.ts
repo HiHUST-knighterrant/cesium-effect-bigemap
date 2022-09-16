@@ -504,6 +504,22 @@ const _clearDrawLine = (_draw_line: Array<Entity>) => {
 };
 
 export const draw = (positions?: _WGS84_POSITION[]) => {
+	// const aaa = [
+	// 	[
+	// 		new Cartesian2(13535603.115939226, 4715113.564150925),
+	// 		new Cartesian2(13534204.33050097, 4714290.81488683),
+	// 	] as [Cartesian2, Cartesian2],
+	// 	[
+	// 		new Cartesian2(13534204.33050097, 4714290.81488683),
+	// 		new Cartesian2(13536500.897284852, 4713214.271736194),
+	// 	] as [Cartesian2, Cartesian2],
+	// 	[
+	// 		new Cartesian2(13536500.897284852, 4713214.271736194),
+	// 		new Cartesian2(13535603.115939226, 4715113.564150925),
+	// 	] as [Cartesian2, Cartesian2],
+	// ];
+
+	// _drawIntersectionLine(aaa, Color.RED);
 	return new Promise<_PROJECTION_ID>((resolve, reject) => {
 		switch (_status) {
 			case _Mode.undo:
@@ -1527,8 +1543,8 @@ const _drawDebugLine = (v: [Cartesian2, Cartesian2] | [Cartesian3, Cartesian3], 
 			polyline: new PolylineGraphics({
 				show: true,
 				positions: [
-					Cartesian3.fromRadians(car0.longitude, car0.latitude),
-					Cartesian3.fromRadians(car1.longitude, car1.latitude),
+					Cartesian3.fromRadians(car0.longitude, car0.latitude,1000),
+					Cartesian3.fromRadians(car1.longitude, car1.latitude,1000),
 				],
 				width: 7.5,
 				material: dotted
@@ -1566,7 +1582,8 @@ const _drawIntersectionLine = (
 ) => {
 	let entity: Entity;
 	line.forEach((v, i) => {
-		if (v instanceof Cartesian3) {
+		// fix: 这里如果用instanceof Cartesian3进行判断 在build后运行的程序有问题
+		if (!(v instanceof Array<Cartesian2>)) {
 			if (i !== line.length - 1) {
 				entity = _drawDebugLine([v, line[i + 1] as Cartesian3], color, dotted);
 			} else {
