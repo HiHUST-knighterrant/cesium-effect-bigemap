@@ -1,4 +1,3 @@
-import './init';
 import {
 	Color,
 	GeoJsonDataSource,
@@ -8,6 +7,8 @@ import {
 	JulianDate,
 	Material,
 	PolylineMaterialAppearance,
+	RoadWayThroughMaterial,
+	RoadWayTwinkleMaterial,
 	Viewer,
 } from 'cesium';
 
@@ -17,13 +18,13 @@ export enum Style {
 }
 
 export class RoadWay {
-	style: Style;
+	style!: Style;
 	private _style: Style;
-	width: number;
+	width!: number;
 	private _width: number;
-	speed: number;
+	speed!: number;
 	private _speed: number;
-	color: Color;
+	color!: Color;
 	private _color: Color;
 
 	private readonly _viewer: Viewer;
@@ -179,46 +180,6 @@ export class RoadWay {
 		this._listener = undefined;
 	};
 
-	private readonly _through_style = new Material({
-		strict: true,
-		fabric: {
-			type: 'through',
-			uniforms: {
-				image: '../File/Texture/spriteline1.png',
-				time: 0,
-			},
-			source: `czm_material czm_getMaterial(czm_materialInput materialInput)
-                        {
-                        czm_material material = czm_getDefaultMaterial(materialInput);
-                        vec2 st = materialInput.st;
-                        vec4 colorImage = texture2D(image, vec2(fract(st.s - time), st.t));
-                        material.alpha = colorImage.a;
-                        material.diffuse = colorImage.rgb * 1.5 ;
-                        return material;
-                        }`,
-		},
-	});
-
-	private readonly _twinkle_style = new Material({
-		strict: true,
-		fabric: {
-			type: 'twinkle',
-			uniforms: {
-				color: Color.fromRandom().withAlpha(1),
-				speed: 20 * Math.random(),
-			},
-			source: `
-uniform vec4 color;
-uniform float speed;
-czm_material czm_getMaterial(czm_materialInput materialInput){
-  czm_material material = czm_getDefaultMaterial(materialInput);
-  float time = fract( czm_frameNumber  *  speed / 1000.0);
-  float scalar = smoothstep(0.0,1.0,time);
-  material.diffuse = color.rgb * scalar;
-  material.alpha = color.a * scalar;
-  return material;
-}
-`,
-		},
-	});
+	private readonly _through_style = RoadWayThroughMaterial();
+	private readonly _twinkle_style = RoadWayTwinkleMaterial();
 }

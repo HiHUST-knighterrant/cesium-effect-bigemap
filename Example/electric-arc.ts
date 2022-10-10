@@ -1,9 +1,9 @@
 import { Color, Viewer } from 'cesium';
 import { GUI } from 'dat.gui';
-import { BMArcMode, BMElectricArc, WGS84_LON_LAT } from '../Src/main';
+import { BMArcMode, BMElectricArc, WGS84_POSITION } from '../Src/main';
 
-let _position_$1: WGS84_LON_LAT;
-let _position_$2: WGS84_LON_LAT;
+let _position_$1: WGS84_POSITION<true, false>;
+let _position_$2: WGS84_POSITION<true, false>;
 let _color: Color;
 const _loadTestData = () => {
 	_position_$1 = [121.5856611728515, 38.9129980676015];
@@ -68,7 +68,7 @@ export const example = (viewer: Viewer, gui: GUI) => {
 };
 
 // // 初始化电弧
-// export const init = (viewer: Viewer, position: WGS84_LON_LAT, arc_mode: BMArcMode, mask: boolean, color: Color) => {
+// export const init = (viewer: Viewer, position: WGS84_POSITION, arc_mode: BMArcMode, mask: boolean, color: Color) => {
 // 	return new BMElectricArc(viewer, position, arc_mode, mask, color);
 // };
 
@@ -98,6 +98,6 @@ export const example = (viewer: Viewer, gui: GUI) => {
 // };
 
 // // 设置电弧中心点的经纬度坐标
-// export const setPosition = (object: BMElectricArc, position: WGS84_LON_LAT) => {
+// export const setPosition = (object: BMElectricArc, position: WGS84_POSITION) => {
 // 	object.position = position;
 // };

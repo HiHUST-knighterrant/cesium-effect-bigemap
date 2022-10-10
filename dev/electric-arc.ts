@@ -13,7 +13,10 @@ import {
 	Transforms,
 	VertexFormat,
 	Viewer,
+	Ellipsoid,
+	ElectricArcMaterialAppearance,
 } from 'cesium';
+import { WGS84_POSITION } from './Types';
 
 export enum ArcMode {
 	Bothway,
@@ -21,24 +24,21 @@ export enum ArcMode {
 	Up,
 }
 
-export type LON = number;
-export type LAT = number;
-export type WGS84_LON_LAT = [LON, LAT];
-
+type _WGS84_POSITION = WGS84_POSITION<true, false>;
 export class ElectricArc {
 	private readonly _viewer: Viewer;
-	position: WGS84_LON_LAT;
-	private _position: WGS84_LON_LAT;
-	arc_mode: ArcMode;
-	private _arc_mode: ArcMode;
-	mask: boolean;
-	private _mask: boolean;
-	color: Color;
-	private _color: Color;
-	radius: number;
-	private _radius: number;
+	position!: _WGS84_POSITION;
+	private _position!: _WGS84_POSITION;
+	arc_mode!: ArcMode;
+	private _arc_mode!: ArcMode;
+	mask!: boolean;
+	private _mask!: boolean;
+	color!: Color;
+	private _color!: Color;
+	radius!: number;
+	private _radius!: number;
 
-	private _primitive: Primitive;
+	private _primitive!: Primitive;
 
 	private readonly _createEllipsoid = (position: Cartesian3) => {
 		const ellipsoid = new EllipsoidGeometry({
@@ -74,25 +74,9 @@ export class ElectricArc {
 		this._primitive = new Primitive({
 			asynchronous: false,
 			geometryInstances: this._createEllipsoid(Cartesian3.fromDegrees(this._position[0], this._position[1], 0)), //合并
-			//某些外观允许每个几何图形实例分别指定某个属性，例如：
-			appearance: new MaterialAppearance({
-				translucent: true,
-				flat: true,
-				material: new Material({
-					strict: true,
-					fabric: {
-						uniforms: {
-							color: this._color,
-							speed: 10.0,
-							arc_mode: this._arc_mode,
-							mask: this._mask,
-						},
-						source: fragment,
-					},
-				}),
-				vertexShaderSource: vertex,
-			}),
+			appearance: ElectricArcMaterialAppearance(),
 		});
+
 		reload && this._viewer.scene.primitives.add(this._primitive);
 	};
 
@@ -102,7 +86,7 @@ export class ElectricArc {
 				get: () => {
 					return this._position;
 				},
-				set: (position: WGS84_LON_LAT) => {
+				set: (position: _WGS84_POSITION) => {
 					if (
 						!(position instanceof Array) ||
 						position.length !== 2 ||
@@ -163,7 +147,7 @@ export class ElectricArc {
 
 	constructor(
 		viewer: Viewer,
-		position: WGS84_LON_LAT,
+		position: _WGS84_POSITION,
 		arc_mode: ArcMode,
 		mask: boolean,
 		color: Color,

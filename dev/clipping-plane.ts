@@ -1,4 +1,5 @@
 import './init';
+import { WGS84_POSITION } from './Types/index';
 // todo: 在删除多边形处理相交边的时候 没有处理分割凹多边形时延长边的情况 检查交集多边形线段
 // 处理多边形相交的情况
 import {
@@ -31,17 +32,26 @@ import {
 	WebMercatorProjection,
 } from 'cesium';
 
+/**
+ * 当前挖方模块的工作状态
+ * @enum
+ */
 enum _Mode {
+	/**
+	 * 工作状态
+	 */
 	todo,
+	/**
+	 * 绘制状态
+	 */
 	draw,
+	/**
+	 * 等待状态
+	 */
 	undo,
 }
 
-type _WGS84_POSITION = {
-	lon: number;
-	lat: number;
-	height?: number;
-};
+type _WGS84_POSITION = WGS84_POSITION<false, false>;
 
 type _CUTTING_ID = number;
 type _WALL_ID = number;
@@ -551,7 +561,7 @@ export const draw = (positions?: _WGS84_POSITION[]) => {
 			while (p.length > 0) {
 				const wgs84 = p.shift()!;
 				index++;
-				last_position = Cartesian3.fromRadians(wgs84.lon, wgs84.lat, wgs84.height ? wgs84.height : 0);
+				last_position = Cartesian3.fromRadians(wgs84.lon, wgs84.lat, 0);
 				const _r = _updatePoint(
 					_positions,
 					_projection_positions,
@@ -1450,7 +1460,7 @@ const _lerp = async (t: Cartesian3[], _need_update_polygons: number[], _projecti
 		max_heights: max_heights,
 		min_heights: min_heights,
 		position_bottom_surface: new_lerp_object
-			.wgs84_bottom_surface!.map(v => {
+			.wgs84_bottom_surface!.map((v: _WGS84_POSITION & { height?: number }) => {
 				v.height = _projection2MinHeight[_projection_id] - offset;
 				return v;
 			})

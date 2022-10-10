@@ -8,16 +8,22 @@
     "preview": "vite preview",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "changelog-r": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
-    "staging": "vite --mode staging"
+    "staging": "vite --mode staging",
+    "docs": "typedoc --options typedoc.json",
+    "docs-debug": "npm run docs && cd ./Docs/ && http-server -c-1"
   },
   "devDependencies": {
+    "typedoc": "^0.23.15",
     "typescript": "^4.5.4",
     "vite": "^2.9.9"
   },
   "dependencies": {
     "@types/dat.gui": "^0.7.7",
-    "cesium": "^1.92.0",
+    "cesium": "1.95.0",
+    "cesium-heatmap": "^0.0.4",
+    "cesium-heatmap-es6": "^0.5.0",
     "dat.gui": "^0.7.9",
+    "heatmap.js": "^2.0.5",
     "kriging-contour": "^1.0.5"
   }
 }

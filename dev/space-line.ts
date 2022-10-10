@@ -7,28 +7,28 @@ import {
 	PolylineGeometry,
 	PolylineMaterialAppearance,
 	Primitive,
+	SpaceLineMaterialAppearance,
 	Viewer,
 } from 'cesium';
+import { WGS84_POSITION } from './Types';
 
-type LON = number;
-type LAT = number;
-type WGS84_LON_LAT = [LON, LAT];
+type _WGS84_POSITION = WGS84_POSITION<true, false>;
 
 // 中心点 数量 范围 颜色
 export class SpaceLine {
-	private _primitive: Primitive;
+	private _primitive!: Primitive;
 	private readonly _viewer: Viewer;
-	center: WGS84_LON_LAT;
-	private _center: WGS84_LON_LAT;
-	quantity: number;
-	private _quantity: number;
-	range: number;
-	private _range: number;
-	color: Color;
-	private _color: Color;
+	center!: _WGS84_POSITION;
+	private _center!: _WGS84_POSITION;
+	quantity!: number;
+	private _quantity!: number;
+	range!: number;
+	private _range!: number;
+	color!: Color;
+	private _color!: Color;
 
-	private readonly _generateInstances = (center: WGS84_LON_LAT, num: number, radius: number) => {
-		const positions: WGS84_LON_LAT[] = [];
+	private readonly _generateInstances = (center: _WGS84_POSITION, num: number, radius: number) => {
+		const positions: _WGS84_POSITION[] = [];
 		for (let i = 0; i < num; i++) {
 			let r = Math.sqrt(Math.random()) * radius;
 			let theta = Math.random() * 2 * Math.PI;
@@ -53,7 +53,7 @@ export class SpaceLine {
 				get: () => {
 					return this._center;
 				},
-				set: (center: WGS84_LON_LAT) => {
+				set: (center: _WGS84_POSITION) => {
 					if (
 						!(center instanceof Array) ||
 						center.length !== 2 ||
@@ -109,39 +109,13 @@ export class SpaceLine {
 		this._primitive = new Primitive({
 			geometryInstances: instances, //合并
 			//某些外观允许每个几何图形实例分别指定某个属性，例如：
-			appearance: new PolylineMaterialAppearance({
-				translucent: true,
-				material: new Material({
-					strict: true,
-					fabric: {
-						type: 'SpaceLine',
-						uniforms: {
-							color: this._color,
-							speed: 5.0,
-							percent: 0.1,
-							gradient: 0.01,
-						},
-						source: `    
-                        czm_material czm_getMaterial(czm_materialInput materialInput){
-                        czm_material material = czm_getDefaultMaterial(materialInput);
-                        vec2 st = materialInput.st;
-                        float t =fract(czm_frameNumber *  speed / 1000.0);
-                        t *= (1.0 + percent);
-                        float alpha = smoothstep(t- percent, t, st.s) * step(-t, -st.s);
-                        alpha += gradient;
-                        material.diffuse = color.rgb;
-                        material.alpha = alpha;
-                        return material;
-                        }`,
-					},
-				}),
-			}),
+			appearance: SpaceLineMaterialAppearance(),
 		});
 
 		reload && this._viewer.scene.primitives.add(this._primitive);
 	};
 
-	constructor(viewer: Viewer, center: WGS84_LON_LAT, quantity = 960, range = 0.1, color = new Color(0, 1, 0, 1)) {
+	constructor(viewer: Viewer, center: _WGS84_POSITION, quantity = 960, range = 0.1, color = new Color(0, 1, 0, 1)) {
 		this._viewer = viewer;
 		center && (this._center = center);
 		quantity && (this._quantity = quantity);

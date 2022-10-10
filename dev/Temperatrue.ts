@@ -20,8 +20,18 @@ export type GEOJSON_FEATURECOLLECTION = {
 	features: GEOJSON_FEATURE[];
 };
 
+/**
+ * 等值面的开启状态
+ * @enum
+ */
 enum _STATUS {
+	/**
+	 * 关闭
+	 */
 	disable,
+	/**
+	 * 开启
+	 */
 	enable,
 }
 

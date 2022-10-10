@@ -6,6 +6,8 @@ import {
 	CustomShader,
 	LightingModel,
 	TextureUniform,
+	TilesBuildingTextureFlood,
+	TilesBuildingTextureNight,
 	UniformType,
 	VaryingType,
 	Viewer,
@@ -24,16 +26,16 @@ export class TilesBuildingTexture {
 	style!: Style;
 	private _style: Style;
 	color!: Color;
-	private _color: Color;
+	private _color!: Color;
 
 	private readonly _updateTileset = (reload: boolean) => {
 		if (!this._tileset || !(this._style in Style)) return;
 		switch (this._style) {
 			case Style.Flood:
-				this._tileset.customShader = this._createBuildingShaderFlood();
+				this._tileset.customShader = TilesBuildingTextureFlood();
 				break;
 			case Style.Night:
-				this._tileset.customShader = this._createBuildingShaderNight();
+				this._tileset.customShader = TilesBuildingTextureNight();
 				break;
 			case Style.None:
 				this._tileset.customShader = undefined;

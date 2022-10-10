@@ -21,7 +21,7 @@
     "allowJs": true,
   },
   "include": [
-    "Src",
-    "Dev/tiles-building-texture.ts"
+    "Src/main.ts",
+    "node_modules/kriging-contour",
   ],
 }
